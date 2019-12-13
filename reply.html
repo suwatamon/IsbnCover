@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+    <p>
+    Input ISBN is {{.Isbn}}.</br>
+    Cover image given by Amazon is below.<br/> 
+    </p>
+    <p>
+     <img src="http://images-jp.amazon.com/images/P/{{.Isbn}}.09.LZZZZZZZ.jpg">
+     <a href="https://www.amazon.co.jp/gp/product/{{.Isbn}}">Amazon 商品ページ</a>
+    </p>
+</body>
+</html>
