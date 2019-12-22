@@ -47,25 +47,32 @@ func generateHTML(w http.ResponseWriter, isbn string) {
 }
 
 func isbn13to10(isbn13 string) (isbn10 string) {
-	sum := 0
 	isbn10 = isbn13[3:13]
+	cd := getCheckDigit(isbn10)
+	isbn10 = isbn10[:9] + cd
+	return
+}
 
-	for i := 10; i > 1; i-- {
-		digit, _ := strconv.Atoi(isbn10[10-i : 10-i+1])
+func getCheckDigit(isbn10 string) (digit string) {
+	/// アルゴリズム：モジュラス11 ウェイト10-2
+	const MAX_WEIGHT = 10
+	const MIN_WEIGHT = 2
+	sum := 0
+	var idx int
+	for i := MAX_WEIGHT; MIN_WEIGHT <= i; i-- {
+		idx = MAX_WEIGHT - i
+		digit, _ := strconv.Atoi(isbn10[idx : idx+1])
 		sum += i * digit
 	}
 
 	c := 11 - (sum % 11)
-	var lastC string
 	if c == 10 {
-		lastC = "X"
+		digit = "X"
 	} else if c == 11 {
-		lastC = "0"
+		digit = "0"
 	} else {
-		lastC = strconv.Itoa(c)
+		digit = strconv.Itoa(c)
 	}
-
-	isbn10 = isbn10[0:9] + lastC
 
 	return
 }
