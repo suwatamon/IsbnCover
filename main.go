@@ -55,12 +55,12 @@ func isbn13to10(isbn13 string) (isbn10 string) {
 
 func getCheckDigit(isbn10 string) (digit string) {
 	/// アルゴリズム：モジュラス11 ウェイト10-2
-	const MAX = 10
-	const MIN = 2
+	const MAX_WEIGHT = 10
+	const MIN_WEIGHT = 2
 	sum := 0
 	var idx int
-	for i := MAX; MIN <= i; i-- {
-		idx = MAX - i
+	for i := MAX_WEIGHT; MIN_WEIGHT <= i; i-- {
+		idx = MAX_WEIGHT - i
 		digit, _ := strconv.Atoi(isbn10[idx : idx+1])
 		sum += i * digit
 	}
