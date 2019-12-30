@@ -128,10 +128,23 @@ func handlerBarcode(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, isbn)
 }
 
+func handlerPredict(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	image := r.Form.Get("image")
+	bitStrAry := strings.Split(image, ",")
+	for i := 0; i < 28; i++ {
+		for j := 0; j < 28; j++ {
+			fmt.Print(bitStrAry[i*28+j])
+		}
+		fmt.Println()
+	}
+}
+
 func main() {
 	http.HandleFunc("/", handlerRoot)
 	http.HandleFunc("/reply", handlerReply)
 	http.HandleFunc("/barcode", handlerBarcode)
+	http.HandleFunc("/predict", handlerPredict)
 
 	http.ListenAndServe(":8888", nil)
 }
