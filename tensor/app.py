@@ -7,7 +7,6 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 model = load_model('cnn.h5')
-graph = tf.Graph()
 
 @app.route('/predict',methods=['POST'])
 def predict():
@@ -19,8 +18,7 @@ def predict():
 @app.route('/')
 def hello_world():
     with open('index.html', "rb") as f:
-        s = f.read()
-        return s
+        return f.read()
     
 
 if __name__ == '__main__':
