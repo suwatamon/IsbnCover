@@ -7,22 +7,19 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 model = load_model('cnn.h5')
-graph = tf.get_default_graph()
-
 
 @app.route('/predict',methods=['POST'])
 def predict():
     req = [int(i) for i in request.form['image'].split(',')]
     img = np.array(req, dtype=np.float32).reshape(1,28,28,1)
-    with graph.as_default():
-        result = np.argmax(model.predict(img))
+    result = np.argmax(model.predict(img))
     return str(result)
 
 @app.route('/')
 def hello_world():
     with open('index.html', "rb") as f:
-        s = f.read()
-        return s
+        return f.read()
+    
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
