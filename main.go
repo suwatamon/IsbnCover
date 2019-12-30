@@ -48,21 +48,22 @@ func generateHTML(w http.ResponseWriter, isbn string) {
 
 func isbn13to10(isbn13 string) (isbn10 string) {
 	isbn10 = isbn13[3:13]
-	cd := getCheckDigit(isbn10)
+	cd := getCheckDigit10(isbn10)
 	isbn10 = isbn10[:9] + cd
 	return
 }
 
-func getCheckDigit(isbn10 string) (digit string) {
+func getCheckDigit10(isbn10 string) (digit string) {
 	/// アルゴリズム：モジュラス11 ウェイト10-2
-	const MAX_WEIGHT = 10
-	const MIN_WEIGHT = 2
+	const MaxWeight = 10
+	const MinWeight = 2
+	const nWegiht = MaxWeight - MinWeight + 1
+
 	sum := 0
-	var idx int
-	for i := MAX_WEIGHT; MIN_WEIGHT <= i; i-- {
-		idx = MAX_WEIGHT - i
+	for idx := 0; idx < nWegiht; idx++ {
+		weight := MaxWeight - idx
 		digit, _ := strconv.Atoi(isbn10[idx : idx+1])
-		sum += i * digit
+		sum += weight * digit
 	}
 
 	c := 11 - (sum % 11)
