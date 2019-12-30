@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>数字認識アプリ</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    </head>
+    <body>
+        <canvas width="280" height="280" style="border: solid"></canvas>
+        <button id="predict">Predict</button>
+        <p>予測結果: <span id="result"></span></p>
+
+        <script type="text/javascript">
+            var pixels = [];
+            for (var i=0; i<28*28; i++) pixels[i] = 0;
+            var canvas = document.querySelector("canvas");
+            var drawing = false;
+
+            canvas.addEventListener("mousedown", function(){
+                drawing = true;
+            })
+
+            canvas.addEventListener("mouseup", function(){
+                drawing = false;
+            })
+
+            canvas.addEventListener("mousemove", function(e){
+                if (drawing) {
+                    var x = Math.floor(e.offsetX/10);
+                    var y = Math.floor(e.offsetY/10);
+                    if (0<=x && x<=27 && 0<=y && y<=27){
+                        canvas.getContext("2d").fillRect(x*10, y*10, 10, 10);
+                        pixels[x+y*28] = 1;
+                    }
+                }
+            })
+
+            $("#predict").click(function(){
+                $.ajax({
+                    url: "http://localhost:5000/predict",
+                    type: "POST",
+                    data: {"image": pixels.join(",")},
+                    success: function(result){
+                        document.getElementById("result").innerHTML = result;
+                    }
+                })
+            });
+        </script>
+    </body>
+</html>
