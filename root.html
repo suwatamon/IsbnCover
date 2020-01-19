@@ -34,49 +34,63 @@
     <script type="text/javascript">
         (function () {
 
-            var mem_canvas;
             const PIXEL_SIZE = 28;
             const CANVAS_FACTOR = 5;
             const canvasWidth = PIXEL_SIZE * CANVAS_FACTOR;
             const canvasHeight = canvasWidth;
 
             function createCanvas() {
+                var mem_canvas;
                 mem_canvas = document.createElement("canvas");
                 mem_canvas.width = canvasWidth;
                 mem_canvas.height = canvasHeight;
+                mem_canvas.setAttribute("style", "border: solid");
                 var context = mem_canvas.getContext('2d');
                 context.fillStyle = "rgb(f,f,f)";
+                return mem_canvas;
             }
 
-            createCanvas();
 
+            var canvasList = [];
             var canvas_area = document.getElementById('canvas_area');
 
-            canvas_area.appendChild(mem_canvas);
+            const N_CANVAS = 2;
+
+            for (var i = 0; i < N_CANVAS; i++) {
+                canvasList.push(createCanvas());
+                canvas_area.appendChild(canvasList[i]);
+            }
+
+
 
             var pixels = [];
-            for (var i = 0; i < 28 * 28; i++) pixels[i] = 0;
-            var canvas = document.querySelector("canvas");
-            var drawing = false;
+            for (var i = 0; i < PIXEL_SIZE ** 2; i++) pixels[i] = 0;
 
-            canvas.addEventListener("mousedown", function () {
-                drawing = true;
-            })
+            for (var i = 0; i < N_CANVAS; i++) {
+                var canvas = canvasList[i];
+                // var drawing = false;
 
-            canvas.addEventListener("mouseup", function () {
-                drawing = false;
-            })
+                canvas.addEventListener("mousedown", function (e) {
+                    e.target.drawing = true;
+                })
 
-            canvas.addEventListener("mousemove", function (e) {
-                if (drawing) {
-                    var x = Math.floor(e.offsetX / 10);
-                    var y = Math.floor(e.offsetY / 10);
-                    if (0 <= x && x <= 27 && 0 <= y && y <= 27) {
-                        canvas.getContext("2d").fillRect(x * 10, y * 10, 10, 10);
-                        pixels[x + y * 28] = 1;
+                canvas.addEventListener("mouseup", function (e) {
+                    e.target.drawing = false;
+                })
+
+                canvas.addEventListener("mousemove", function (e) {
+                    const CF = CANVAS_FACTOR;
+                    const PS = PIXEL_SIZE;
+                    if (e.target.drawing) {
+                        var x = Math.floor(e.offsetX / CF);
+                        var y = Math.floor(e.offsetY / CF);
+                        if (0 <= x && x < PS && 0 <= y && y < PS) {
+                            e.target.getContext("2d").fillRect(x * CF, y * CF, CF, CF);
+                            pixels[x + y * PS] = 1;
+                        }
                     }
-                }
-            })
+                })
+            }
 
             $("#predict").click(function () {
                 $.ajax({
