@@ -28,7 +28,7 @@
 
     <div id="canvas_area"></div>
     <button id="all_clear">クリア</button>
-    <br/>
+    <br />
     <button id="predict">Predict</button>
     <p>予測結果: <span id="result"></span></p>
 
@@ -65,9 +65,14 @@
 
 
             var pixels = [];
-            for (var i = 0; i < PIXEL_SIZE ** 2; i++) pixels[i] = 0;
 
-            for (var i = 0; i < N_CANVAS; i++) {
+            for (let j = 0; j < N_CANVAS; j++) {
+                pixels[j] = [];
+                for (let i = 0; i < PIXEL_SIZE ** 2; i++)
+                    pixels[j][i] = 0;
+            }
+
+            for (let i = 0; i < N_CANVAS; i++) {
                 var canvas = canvasList[i];
                 // var drawing = false;
 
@@ -87,7 +92,7 @@
                         var y = Math.floor(e.offsetY / CF);
                         if (0 <= x && x < PS && 0 <= y && y < PS) {
                             e.target.getContext("2d").fillRect(x * CF, y * CF, CF, CF);
-                            pixels[x + y * PS] = 1;
+                            pixels[i][x + y * PS] = 1;
                         }
                     }
                 })
@@ -98,8 +103,8 @@
                     url: "http://localhost:8888/predict",
                     type: "POST",
                     data: {
-                        "image1": pixels.join(","),
-                        "image2": pixels.join(",")
+                        "image1": pixels[0].join(","),
+                        "image2": pixels[1].join(",")
                     },
                     success: function (result) {
                         document.getElementById("result").innerHTML = result;

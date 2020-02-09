@@ -130,14 +130,26 @@ func handlerBarcode(w http.ResponseWriter, r *http.Request) {
 
 func handlerPredict(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	image := r.Form.Get("image")
+	image := r.Form.Get("image1")
 	bitStrAry := strings.Split(image, ",")
+	fmt.Println("image1")
 	for i := 0; i < 28; i++ {
 		for j := 0; j < 28; j++ {
 			fmt.Print(bitStrAry[i*28+j])
 		}
 		fmt.Println()
 	}
+
+	fmt.Println("image2")
+	image = r.Form.Get("image2")
+	bitStrAry = strings.Split(image, ",")
+	for i := 0; i < 28; i++ {
+		for j := 0; j < 28; j++ {
+			fmt.Print(bitStrAry[i*28+j])
+		}
+		fmt.Println()
+	}
+
 }
 
 func main() {
