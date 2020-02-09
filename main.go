@@ -142,12 +142,24 @@ func handlerPredict(w http.ResponseWriter, r *http.Request) {
 
 	for _, ii := range u {
 		fmt.Println("image")
-		for i := 0; i < PixelSize; i++ {
-			for j := 0; j < PixelSize; j++ {
-				fmt.Print(ii[i*PixelSize+j])
-			}
-			fmt.Println()
-		}
+		// for i := 0; i < PixelSize; i++ {
+		// 	for j := 0; j < PixelSize; j++ {
+		// 		fmt.Print(ii[i*PixelSize+j])
+		// 	}
+		// 	fmt.Println()
+		// }
+
+		str := fmt.Sprintf("%v", ii)
+		lstr := len(str)
+		str = str[1 : lstr-1]
+
+		execpy := exec.Command("py", "numrecog.py")
+		stdin, _ := execpy.StdinPipe()
+		io.WriteString(stdin, str)
+		stdin.Close()
+		numPredicted, _ := execpy.Output()
+		fmt.Printf("結果: %s", numPredicted)
+
 	}
 }
 
