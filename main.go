@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -129,27 +130,25 @@ func handlerBarcode(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlerPredict(w http.ResponseWriter, r *http.Request) {
+	const PixelSize = 28
 	r.ParseForm()
-	image := r.Form.Get("image1")
-	bitStrAry := strings.Split(image, ",")
-	fmt.Println("image1")
-	for i := 0; i < 28; i++ {
-		for j := 0; j < 28; j++ {
-			fmt.Print(bitStrAry[i*28+j])
-		}
-		fmt.Println()
+	image := r.Form.Get("imageList")
+
+	var u [][]int
+	err := json.Unmarshal([]byte(image), &u)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	fmt.Println("image2")
-	image = r.Form.Get("image2")
-	bitStrAry = strings.Split(image, ",")
-	for i := 0; i < 28; i++ {
-		for j := 0; j < 28; j++ {
-			fmt.Print(bitStrAry[i*28+j])
+	for _, ii := range u {
+		fmt.Println("image")
+		for i := 0; i < PixelSize; i++ {
+			for j := 0; j < PixelSize; j++ {
+				fmt.Print(ii[i*PixelSize+j])
+			}
+			fmt.Println()
 		}
-		fmt.Println()
 	}
-
 }
 
 func main() {

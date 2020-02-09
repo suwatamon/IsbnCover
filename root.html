@@ -55,7 +55,7 @@
             var canvasList = [];
             var canvas_area = document.getElementById('canvas_area');
 
-            const N_CANVAS = 2;
+            const N_CANVAS = 3;
 
             for (var i = 0; i < N_CANVAS; i++) {
                 canvasList.push(createCanvas());
@@ -103,8 +103,7 @@
                     url: "http://localhost:8888/predict",
                     type: "POST",
                     data: {
-                        "image1": pixels[0].join(","),
-                        "image2": pixels[1].join(",")
+                        "imageList": JSON.stringify(pixels)
                     },
                     success: function (result) {
                         document.getElementById("result").innerHTML = result;
