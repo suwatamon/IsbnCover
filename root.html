@@ -117,6 +117,9 @@
                     context.fillStyle = "white";
                     context.fillRect(0, 0, canvasWidth, canvasHeight);
                     context.fillStyle = "black";
+
+                    for (let j = 0; j < PIXEL_SIZE ** 2; j++)
+                        pixels[i][j] = 0;
                 }
             });
 
