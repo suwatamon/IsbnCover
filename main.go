@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -140,28 +141,40 @@ func handlerPredict(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	execpy := exec.Command("py", "numrecog.py")
+	stdin, err := execpy.StdinPipe()
+	if err != nil {
+		fmt.Fprintln(w, "Number recognition input error")
+		fmt.Println(err)
+		return
+	}
+	stdout, err := execpy.StdoutPipe()
+	if err != nil {
+		fmt.Fprintln(w, "Number recognition output error")
+		fmt.Println(err)
+		return
+	}
+
+	execpy.Start()
+	scanner := bufio.NewScanner(stdout)
+	isbn := ""
 	for _, ii := range u {
 		str := fmt.Sprintf("%v", ii)
 		// 先頭と最後の1文字ずつ([])を取り除く
 		str = str[1 : len(str)-1]
 
-		execpy := exec.Command("py", "numrecog.py")
-		stdin, err := execpy.StdinPipe()
-		if err != nil {
-			fmt.Fprintln(w, "Number recognition input error")
-			fmt.Println(err)
-			return
-		}
-		io.WriteString(stdin, str)
-		stdin.Close()
-		numPredicted, err := execpy.Output()
-		if err != nil {
-			fmt.Fprintln(w, "Number recognition output error")
-			fmt.Println(err)
-			return
-		}
-		fmt.Printf("結果: %s", numPredicted)
+		io.WriteString(stdin, str+"\n")
+		// numPredicted, err := execpy.Output()
+		scanner.Scan()
+
+		isbn += scanner.Text()
+
 	}
+	fmt.Printf("結果: %s\n", isbn)
+	stdin.Close()
+	execpy.Wait()
+
+	generateHTML(w, isbn)
 }
 
 func main() {
