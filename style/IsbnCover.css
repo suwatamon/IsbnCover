@@ -1,0 +1,8 @@
+.input-container{
+    display: inline-block;
+}
+
+.input-container > input{
+    display: block;
+}
+

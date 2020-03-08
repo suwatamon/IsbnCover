@@ -13,6 +13,10 @@ go 言語と Python をインストール
 ```powershell:install command
 pip install pyzbar pillow
 ```
+数字認識用tensorflow とかインストール
+```
+pip install tensorflow==2.0.0 keras matplotlib Flask flask-cors
+```
 
 ## 作成・実行
 ```powershell:build command

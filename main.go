@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -10,6 +12,11 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+)
+
+var (
+	chNumrecogIn  chan<- string
+	chNumrecogOut <-chan string
 )
 
 func handlerRoot(w http.ResponseWriter, r *http.Request) {
@@ -128,10 +135,98 @@ func handlerBarcode(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, isbn)
 }
 
+func handlerPredict(w http.ResponseWriter, r *http.Request) {
+	const PixelSize = 28
+	r.ParseForm()
+	image := r.Form.Get("imageList")
+
+	var u [][]int
+	err := json.Unmarshal([]byte(image), &u)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	execpy := exec.Command("py", "numrecog.py")
+	stdin, err := execpy.StdinPipe()
+	if err != nil {
+		fmt.Fprintln(w, "Number recognition input error")
+		fmt.Println(err)
+		return
+	}
+	stdout, err := execpy.StdoutPipe()
+	if err != nil {
+		fmt.Fprintln(w, "Number recognition output error")
+		fmt.Println(err)
+		return
+	}
+
+	execpy.Start()
+	scanner := bufio.NewScanner(stdout)
+	isbn := ""
+	for _, ii := range u {
+		str := fmt.Sprintf("%v", ii)
+		// 先頭と最後の1文字ずつ([])を取り除く
+		str = str[1 : len(str)-1]
+
+		io.WriteString(stdin, str+"\n")
+		// numPredicted, err := execpy.Output()
+		scanner.Scan()
+
+		isbn += scanner.Text()
+
+	}
+	fmt.Printf("結果: %s\n", isbn)
+	stdin.Close()
+	execpy.Wait()
+
+	generateHTML(w, isbn)
+}
+
+func handlerPredictCh(w http.ResponseWriter, r *http.Request) {
+	const PixelSize = 28
+
+	r.ParseForm()
+	image := r.Form.Get("imageList")
+
+	var u [][]int
+	err := json.Unmarshal([]byte(image), &u)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	isbn := ""
+	for _, ii := range u {
+		str := fmt.Sprintf("%v", ii)
+		// 先頭と最後の1文字ずつ([])を取り除く
+		str = str[1 : len(str)-1]
+		chNumrecogIn <- str
+	}
+	for i := 0; i < len(u); i++ {
+		numPredicted := <-chNumrecogOut
+		isbn += numPredicted
+	}
+	fmt.Printf("結果: %s\n", isbn)
+
+	generateHTML(w, isbn)
+}
+
 func main() {
+
+	// go routine で Pythonスクリプトを起動して
+	// channel で やりとりさせたい
+
+	// go numrecog()
+
+	chNumrecogIn = make(chan<- string)
+	chNumrecogOut = make(<-chan string)
+
+	http.Handle("/style/",
+		http.StripPrefix("/style/",
+			http.FileServer(http.Dir("style/"))))
 	http.HandleFunc("/", handlerRoot)
 	http.HandleFunc("/reply", handlerReply)
 	http.HandleFunc("/barcode", handlerBarcode)
+	http.HandleFunc("/predict", handlerPredict)
 
 	http.ListenAndServe(":8888", nil)
 }
