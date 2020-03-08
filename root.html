@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <title>バーコード認識アプリ</title>
+    <link rel="stylesheet" href="style/IsbnCover.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
 
@@ -61,6 +62,14 @@
                 return mem_button;
             }
 
+            function createDiv() {
+                let mem_div;
+                mem_div = document.createElement("div");
+                mem_div.class = "input-container";
+
+                return mem_div;
+            }
+
 
             var canvasList = [];
             var buttonList = [];
@@ -70,13 +79,15 @@
             for (var i = 0; i < N_CANVAS; i++) {
                 let tmpCanvas = createCanvas();
                 let tmpButton = createButton();
+                let tmpDiv = createDiv();
 
                 tmpCanvas.index = i;
                 canvasList.push(tmpCanvas);
                 tmpButton.canvas = tmpCanvas;
 
+                tmpDiv.appendChild(tmpButton);
                 canvas_area.appendChild(tmpCanvas);
-                canvas_area.appendChild(tmpButton);
+                canvas_area.appendChild(tmpDiv);
             }
 
 
