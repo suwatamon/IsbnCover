@@ -27,8 +27,8 @@
 
 
     <div id="canvas_area"></div>
-    <button id="all_clear">クリア</button>
     <br />
+    <button id="all_clear">全クリア</button>
     <button id="predict">Predict</button>
     <p>予測結果: <span id="result"></span></p>
 
@@ -51,15 +51,32 @@
                 return mem_canvas;
             }
 
+            function createButton() {
+                let mem_button;
+                mem_button = document.createElement("input");
+                mem_button.type = "button";
+                mem_button.value = "クリア";
+                mem_button.addEventListener('click', e => clearCanvas(e.target.canvas));
+
+                return mem_button;
+            }
+
 
             var canvasList = [];
+            var buttonList = [];
             var canvas_area = document.getElementById('canvas_area');
 
-            const N_CANVAS = 3;
-
+            const N_CANVAS = 13;
             for (var i = 0; i < N_CANVAS; i++) {
-                canvasList.push(createCanvas());
-                canvas_area.appendChild(canvasList[i]);
+                let tmpCanvas = createCanvas();
+                let tmpButton = createButton();
+
+                tmpCanvas.index = i;
+                canvasList.push(tmpCanvas);
+                tmpButton.canvas = tmpCanvas;
+
+                canvas_area.appendChild(tmpCanvas);
+                canvas_area.appendChild(tmpButton);
             }
 
 
@@ -113,16 +130,19 @@
 
             $("#all_clear").click(function () {
                 for (var i = 0; i < N_CANVAS; i++) {
-                    var context = canvasList[i].getContext('2d');
-                    context.fillStyle = "white";
-                    context.fillRect(0, 0, canvasWidth, canvasHeight);
-                    context.fillStyle = "black";
-
-                    for (let j = 0; j < PIXEL_SIZE ** 2; j++)
-                        pixels[i][j] = 0;
+                    clearCanvas(canvasList[i]);
                 }
             });
 
+            function clearCanvas(canvas) {
+                var context = canvas.getContext('2d');
+                context.fillStyle = "white";
+                context.fillRect(0, 0, canvasWidth, canvasHeight);
+                context.fillStyle = "black";
+                let i = canvas.index;
+                for (let j = 0; j < PIXEL_SIZE ** 2; j++)
+                    pixels[i][j] = 0;
+            }
 
         })();
     </script>
