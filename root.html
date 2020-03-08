@@ -31,7 +31,6 @@
     <br />
     <button id="all_clear">全クリア</button>
     <button id="predict">Predict</button>
-    <p>予測結果: <span id="result"></span></p>
 
     <script type="text/javascript">
         (function () {
@@ -134,7 +133,7 @@
                         "imageList": JSON.stringify(pixels)
                     },
                     success: function (result) {
-                        document.getElementById("result").innerHTML = result;
+                        document.write(result);
                     }
                 })
             });
