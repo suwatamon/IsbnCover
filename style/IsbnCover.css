@@ -1,8 +1,8 @@
-/* input{
-    display: block;
-} */
-
-
-p{
-    color:red;
+.input-container{
+    display: inline-block;
 }
+
+.input-container > input{
+    display: block;
+}
+

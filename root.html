@@ -65,7 +65,7 @@
             function createDiv() {
                 let mem_div;
                 mem_div = document.createElement("div");
-                mem_div.class = "input-container";
+                mem_div.classList.add("input-container");
 
                 return mem_div;
             }
@@ -86,7 +86,7 @@
                 tmpButton.canvas = tmpCanvas;
 
                 tmpDiv.appendChild(tmpButton);
-                canvas_area.appendChild(tmpCanvas);
+                tmpDiv.appendChild(tmpCanvas);
                 canvas_area.appendChild(tmpDiv);
             }
 
