@@ -17,8 +17,10 @@ import (
 const nIsbnMax = 13
 
 var (
-	chNumrecogIn  chan string
-	chNumrecogOut chan string
+	chNumrecogIn  = make(chan string, nIsbnMax)
+	chNumrecogOut = make(chan string, nIsbnMax)
+	chBarcodeIn   = make(chan string, 1)
+	chBarcodeOut  = make(chan string, 1)
 )
 
 func handlerRoot(w http.ResponseWriter, r *http.Request) {
@@ -88,6 +90,14 @@ func getCheckDigit10(isbn10 string) (digit string) {
 }
 
 func handlerBarcode(w http.ResponseWriter, r *http.Request) {
+	const tmpDir = "tmp"
+	err := os.MkdirAll(tmpDir, 0755)
+	if err != nil {
+		fmt.Fprintln(w, "Temporary directory make error")
+		fmt.Println(err)
+		return
+	}
+
 	// POSTメソッドのみ受け付ける
 	if r.Method != "POST" {
 		fmt.Fprintln(w, "The method should be POST")
@@ -103,15 +113,17 @@ func handlerBarcode(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	fmt.Println("uploaded filename is ", fileHeader.Filename)
 
-	// とりあえず書き込むファイル名は固定かつ jpg 決め打ち
-	localFileName := "tmp_Barcode.jpg"
-
-	BarcodeFile, err := os.Create("./" + localFileName)
+	// ファイルを tmpDir 以下に書き込む
+	localFileName := tmpDir + "/" + fileHeader.Filename
+	BarcodeFile, err := os.Create(localFileName)
 	if err != nil {
 		fmt.Fprintln(w, "Can not create temporary file on server")
 		log.Fatal(err)
 	}
-	defer BarcodeFile.Close()
+	defer func() {
+		BarcodeFile.Close()
+		os.Remove(localFileName)
+	}()
 
 	size, err := io.Copy(BarcodeFile, file)
 	if err != nil {
@@ -123,12 +135,15 @@ func handlerBarcode(w http.ResponseWriter, r *http.Request) {
 	// アップロードされた画像をバーコードとして解釈
 	// Python スクリプトを外部コマンドとして呼び出し
 	// 結果は標準出力で返されるバイト列を取得
-	isbnFromBarcode, err := exec.Command("py", "barcode.py").Output()
-	if err != nil {
-		fmt.Fprintln(w, "Barcode image can not be interpreted as ISBN")
-		fmt.Println(err)
-		return
-	}
+	chBarcodeIn <- localFileName
+	isbnFromBarcode := <-chBarcodeOut
+
+	// isbnFromBarcode, err := exec.Command("py", "barcode.py").Output()
+	// if err != nil {
+	// 	fmt.Fprintln(w, "Barcode image can not be interpreted as ISBN")
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
 	// ISBN バーコードの解釈結果を確認出力
 	fmt.Println(isbnFromBarcode, string(isbnFromBarcode), strings.TrimSpace(string(isbnFromBarcode)))
@@ -215,9 +230,8 @@ func main() {
 
 	// go routine で Pythonスクリプトを起動して
 	// channel で やりとりさせる
-	chNumrecogIn = make(chan string, nIsbnMax)
-	chNumrecogOut = make(chan string, nIsbnMax)
 	go callPyWithChan("numrecog.py", chNumrecogIn, chNumrecogOut)
+	go callPyWithChan("barcode.py", chBarcodeIn, chBarcodeOut)
 
 	http.Handle("/style/",
 		http.StripPrefix("/style/",
