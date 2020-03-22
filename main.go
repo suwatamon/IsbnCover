@@ -48,8 +48,6 @@ func generateHTML(w http.ResponseWriter, isbn string) {
 	}
 
 	d := tmplData{Isbn: isbn}
-	// 動作確認用に解釈したISBN文字列を出力
-	fmt.Println(d.Isbn)
 
 	// テンプレートを描画
 	if err := t.ExecuteTemplate(w, "reply.html", d); err != nil {
@@ -134,25 +132,14 @@ func handlerBarcode(w http.ResponseWriter, r *http.Request) {
 
 	// アップロードされた画像をバーコードとして解釈
 	// Python スクリプトを外部コマンドとして呼び出し
-	// 結果は標準出力で返されるバイト列を取得
 	chBarcodeIn <- localFileName
 	isbnFromBarcode := <-chBarcodeOut
-
-	// isbnFromBarcode, err := exec.Command("py", "barcode.py").Output()
-	// if err != nil {
-	// 	fmt.Fprintln(w, "Barcode image can not be interpreted as ISBN")
-	// 	fmt.Println(err)
-	// 	return
-	// }
-
-	// ISBN バーコードの解釈結果を確認出力
-	fmt.Println(isbnFromBarcode, string(isbnFromBarcode), strings.TrimSpace(string(isbnFromBarcode)))
 
 	isbn := strings.TrimSpace(string(isbnFromBarcode))
 	generateHTML(w, isbn)
 }
 
-func handlerPredictCh(w http.ResponseWriter, r *http.Request) {
+func handlerPredict(w http.ResponseWriter, r *http.Request) {
 	const PixelSize = 28
 
 	r.ParseForm()
@@ -228,18 +215,19 @@ func callPyWithChan(pyScript string, chIn <-chan string, chOut chan<- string) {
 
 func main() {
 
-	// go routine で Pythonスクリプトを起動して
-	// channel で やりとりさせる
-	go callPyWithChan("numrecog.py", chNumrecogIn, chNumrecogOut)
-	go callPyWithChan("barcode.py", chBarcodeIn, chBarcodeOut)
-
 	http.Handle("/style/",
 		http.StripPrefix("/style/",
 			http.FileServer(http.Dir("style/"))))
 	http.HandleFunc("/", handlerRoot)
 	http.HandleFunc("/reply", handlerReply)
+
+	// go routine で Pythonスクリプトを起動して
+	// channel で やりとりさせる
+	go callPyWithChan("barcode.py", chBarcodeIn, chBarcodeOut)
 	http.HandleFunc("/barcode", handlerBarcode)
-	http.HandleFunc("/predict", handlerPredictCh)
+
+	go callPyWithChan("numrecog.py", chNumrecogIn, chNumrecogOut)
+	http.HandleFunc("/predict", handlerPredict)
 
 	http.ListenAndServe(":8888", nil)
 }
