@@ -14,9 +14,11 @@ import (
 	"strings"
 )
 
+const nIsbnMax = 13
+
 var (
-	chNumrecogIn  chan<- string
-	chNumrecogOut <-chan string
+	chNumrecogIn  chan string
+	chNumrecogOut chan string
 )
 
 func handlerRoot(w http.ResponseWriter, r *http.Request) {
@@ -210,6 +212,42 @@ func handlerPredictCh(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, isbn)
 }
 
+func callPyWithChan(pyScript string, chIn <-chan string, chOut chan<- string) {
+	execpy := exec.Command("py", pyScript)
+	stdin, err := execpy.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer stdin.Close()
+
+	stdout, err := execpy.StdoutPipe()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	execpy.Start()
+	defer execpy.Wait()
+
+	go func() {
+		for {
+			str, ok := <-chIn
+			if ok == false {
+				return
+			}
+			io.WriteString(stdin, str+"\n")
+		}
+	}()
+
+	scanner := bufio.NewScanner(stdout)
+	go func() {
+		for scanner.Scan() {
+			chOut <- scanner.Text()
+		}
+
+	}()
+}
+
 func main() {
 
 	// go routine で Pythonスクリプトを起動して
@@ -217,8 +255,9 @@ func main() {
 
 	// go numrecog()
 
-	chNumrecogIn = make(chan<- string)
-	chNumrecogOut = make(<-chan string)
+	chNumrecogIn = make(chan string, nIsbnMax)
+	chNumrecogOut = make(chan string, nIsbnMax)
+	// callPyWithChan("numrecog.py", chNumrecogIn, chNumrecogOut)
 
 	http.Handle("/style/",
 		http.StripPrefix("/style/",
