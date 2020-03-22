@@ -1,9 +1,8 @@
 import numpy as np
-import tensorflow as tf
 from keras.models import load_model
+import sys
 
 model = load_model('tensor/cnn.h5')
-
 
 img_input = input()
 while img_input:

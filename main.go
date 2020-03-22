@@ -171,7 +171,6 @@ func handlerPredict(w http.ResponseWriter, r *http.Request) {
 		str = str[1 : len(str)-1]
 
 		io.WriteString(stdin, str+"\n")
-		// numPredicted, err := execpy.Output()
 		scanner.Scan()
 
 		isbn += scanner.Text()
@@ -219,15 +218,28 @@ func callPyWithChan(pyScript string, chIn <-chan string, chOut chan<- string) {
 		fmt.Println(err)
 		return
 	}
-	defer stdin.Close()
-
 	stdout, err := execpy.StdoutPipe()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	stderr, err := execpy.StderrPipe()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	scannerErr := bufio.NewScanner(stderr)
+	go func() {
+		for scannerErr.Scan() {
+			fmt.Fprintln(os.Stderr, scannerErr.Text())
+		}
+	}()
+
 	execpy.Start()
-	defer execpy.Wait()
+	defer func() {
+		stdin.Close()
+		execpy.Wait()
+	}()
 
 	go func() {
 		for {
@@ -240,24 +252,18 @@ func callPyWithChan(pyScript string, chIn <-chan string, chOut chan<- string) {
 	}()
 
 	scanner := bufio.NewScanner(stdout)
-	go func() {
-		for scanner.Scan() {
-			chOut <- scanner.Text()
-		}
-
-	}()
+	for scanner.Scan() {
+		chOut <- scanner.Text()
+	}
 }
 
 func main() {
 
 	// go routine で Pythonスクリプトを起動して
-	// channel で やりとりさせたい
-
-	// go numrecog()
-
+	// channel で やりとりさせる
 	chNumrecogIn = make(chan string, nIsbnMax)
 	chNumrecogOut = make(chan string, nIsbnMax)
-	// callPyWithChan("numrecog.py", chNumrecogIn, chNumrecogOut)
+	go callPyWithChan("numrecog.py", chNumrecogIn, chNumrecogOut)
 
 	http.Handle("/style/",
 		http.StripPrefix("/style/",
@@ -265,7 +271,8 @@ func main() {
 	http.HandleFunc("/", handlerRoot)
 	http.HandleFunc("/reply", handlerReply)
 	http.HandleFunc("/barcode", handlerBarcode)
-	http.HandleFunc("/predict", handlerPredict)
+	// http.HandleFunc("/predict", handlerPredict)
+	http.HandleFunc("/predict", handlerPredictCh)
 
 	http.ListenAndServe(":8888", nil)
 }
