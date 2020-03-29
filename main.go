@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 const nIsbnMax = 13
@@ -19,8 +20,11 @@ const nIsbnMax = 13
 var (
 	chNumrecogIn  = make(chan string, nIsbnMax)
 	chNumrecogOut = make(chan string, nIsbnMax)
-	chBarcodeIn   = make(chan string, 1)
-	chBarcodeOut  = make(chan string, 1)
+	muNumrecog    sync.Mutex
+
+	chBarcodeIn  = make(chan string, 1)
+	chBarcodeOut = make(chan string, 1)
+	muBarcode    sync.Mutex
 )
 
 func handlerRoot(w http.ResponseWriter, r *http.Request) {
@@ -132,8 +136,10 @@ func handlerBarcode(w http.ResponseWriter, r *http.Request) {
 
 	// アップロードされた画像をバーコードとして解釈
 	// Python スクリプトを外部コマンドとして呼び出し
+	muBarcode.Lock()
 	chBarcodeIn <- localFileName
 	isbnFromBarcode := <-chBarcodeOut
+	muBarcode.Unlock()
 
 	isbn := strings.TrimSpace(string(isbnFromBarcode))
 	generateHTML(w, isbn)
@@ -152,6 +158,7 @@ func handlerPredict(w http.ResponseWriter, r *http.Request) {
 	}
 
 	isbn := ""
+	muNumrecog.Lock()
 	for _, ii := range u {
 		str := fmt.Sprintf("%v", ii)
 		// 先頭と最後の1文字ずつ([])を取り除く
@@ -162,6 +169,8 @@ func handlerPredict(w http.ResponseWriter, r *http.Request) {
 		numPredicted := <-chNumrecogOut
 		isbn += numPredicted
 	}
+	muNumrecog.Unlock()
+
 	fmt.Printf("結果: %s\n", isbn)
 
 	generateHTML(w, isbn)
