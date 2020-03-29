@@ -91,16 +91,7 @@ $(function () {
     }
 
     $("#predict").click(function () {
-        $.ajax({
-            url: "http://localhost:8888/predict",
-            type: "POST",
-            data: {
-                "imageList": JSON.stringify(pixels)
-            },
-            success: function (result) {
-                document.write(result);
-            }
-        })
+        document.querySelector("#hdnPredict").value = JSON.stringify(pixels);
     });
 
     $("#all_clear").click(function () {

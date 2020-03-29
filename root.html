@@ -13,17 +13,17 @@
     Search book's cover from Amazon by ISBN. <br />
     <p>
         Enter ISBN (10 or 13)
-        <form action=/reply method=post>
-            <input type=text name=isbn value=9784873117522>
-            <input type=submit name=submit value=送信>
+        <form action="/reply" method="post">
+            <input type="text" name="isbn" value="9784873117522">
+            <input type="submit" name="submit" value="送信">
         </form>
     </p>
 
     <p>
         Upload ISBN Barcode
-        <form action=/barcode method=post enctype="multipart/form-data">
+        <form action="/barcode" method="post" enctype="multipart/form-data">
             <input type="file" name="barcode" accept="image/*">
-            <input type=submit name=submit_barcode value=Upload>
+            <input type="submit" name="submit_barcode" value="Upload">
         </form>
     </p>
 
@@ -31,7 +31,10 @@
     <div id="canvas_area"></div>
     <br />
     <button id="all_clear">全クリア</button>
-    <button id="predict">Predict</button>
+    <form id="predict" action="/predict" method="post">
+        <input type="hidden" name="imageList" id="hdnPredict" value="{}">
+        <input type="submit" value="Predict">
+    </form>
 
 </body>
 

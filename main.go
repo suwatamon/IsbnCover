@@ -149,7 +149,7 @@ func handlerPredict(w http.ResponseWriter, r *http.Request) {
 	const PixelSize = 28
 
 	r.ParseForm()
-	image := r.Form.Get("imageList")
+	image := r.FormValue("imageList")
 
 	var u [][]int
 	err := json.Unmarshal([]byte(image), &u)
