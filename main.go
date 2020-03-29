@@ -192,25 +192,25 @@ func callPyWithChan(pyScript string, chIn <-chan string, chOut chan<- string) {
 	}()
 
 	execpy.Start()
-	defer func() {
-		stdin.Close()
-		execpy.Wait()
-	}()
+	defer execpy.Wait()
 
 	go func() {
 		for {
 			str, ok := <-chIn
 			if ok == false {
+				stdin.Close()
 				return
 			}
 			io.WriteString(stdin, str+"\n")
 		}
 	}()
 
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		chOut <- scanner.Text()
-	}
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			chOut <- scanner.Text()
+		}
+	}()
 }
 
 func main() {
