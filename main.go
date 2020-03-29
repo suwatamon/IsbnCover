@@ -227,6 +227,9 @@ func main() {
 	http.Handle("/style/",
 		http.StripPrefix("/style/",
 			http.FileServer(http.Dir("style/"))))
+	http.Handle("/script/",
+		http.StripPrefix("/script/",
+			http.FileServer(http.Dir("script/"))))
 	http.HandleFunc("/", handlerRoot)
 	http.HandleFunc("/reply", handlerReply)
 
