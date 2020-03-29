@@ -14,9 +14,13 @@ import (
 	"strings"
 )
 
+const nIsbnMax = 13
+
 var (
-	chNumrecogIn  chan<- string
-	chNumrecogOut <-chan string
+	chNumrecogIn  = make(chan string, nIsbnMax)
+	chNumrecogOut = make(chan string, nIsbnMax)
+	chBarcodeIn   = make(chan string, 1)
+	chBarcodeOut  = make(chan string, 1)
 )
 
 func handlerRoot(w http.ResponseWriter, r *http.Request) {
@@ -44,8 +48,6 @@ func generateHTML(w http.ResponseWriter, isbn string) {
 	}
 
 	d := tmplData{Isbn: isbn}
-	// 動作確認用に解釈したISBN文字列を出力
-	fmt.Println(d.Isbn)
 
 	// テンプレートを描画
 	if err := t.ExecuteTemplate(w, "reply.html", d); err != nil {
@@ -86,6 +88,14 @@ func getCheckDigit10(isbn10 string) (digit string) {
 }
 
 func handlerBarcode(w http.ResponseWriter, r *http.Request) {
+	const tmpDir = "tmp"
+	err := os.MkdirAll(tmpDir, 0755)
+	if err != nil {
+		fmt.Fprintln(w, "Temporary directory make error")
+		fmt.Println(err)
+		return
+	}
+
 	// POSTメソッドのみ受け付ける
 	if r.Method != "POST" {
 		fmt.Fprintln(w, "The method should be POST")
@@ -101,15 +111,17 @@ func handlerBarcode(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	fmt.Println("uploaded filename is ", fileHeader.Filename)
 
-	// とりあえず書き込むファイル名は固定かつ jpg 決め打ち
-	localFileName := "tmp_Barcode.jpg"
-
-	BarcodeFile, err := os.Create("./" + localFileName)
+	// ファイルを tmpDir 以下に書き込む
+	localFileName := tmpDir + "/" + fileHeader.Filename
+	BarcodeFile, err := os.Create(localFileName)
 	if err != nil {
 		fmt.Fprintln(w, "Can not create temporary file on server")
 		log.Fatal(err)
 	}
-	defer BarcodeFile.Close()
+	defer func() {
+		BarcodeFile.Close()
+		os.Remove(localFileName)
+	}()
 
 	size, err := io.Copy(BarcodeFile, file)
 	if err != nil {
@@ -120,69 +132,14 @@ func handlerBarcode(w http.ResponseWriter, r *http.Request) {
 
 	// アップロードされた画像をバーコードとして解釈
 	// Python スクリプトを外部コマンドとして呼び出し
-	// 結果は標準出力で返されるバイト列を取得
-	isbnFromBarcode, err := exec.Command("py", "barcode.py").Output()
-	if err != nil {
-		fmt.Fprintln(w, "Barcode image can not be interpreted as ISBN")
-		fmt.Println(err)
-		return
-	}
-
-	// ISBN バーコードの解釈結果を確認出力
-	fmt.Println(isbnFromBarcode, string(isbnFromBarcode), strings.TrimSpace(string(isbnFromBarcode)))
+	chBarcodeIn <- localFileName
+	isbnFromBarcode := <-chBarcodeOut
 
 	isbn := strings.TrimSpace(string(isbnFromBarcode))
 	generateHTML(w, isbn)
 }
 
 func handlerPredict(w http.ResponseWriter, r *http.Request) {
-	const PixelSize = 28
-	r.ParseForm()
-	image := r.Form.Get("imageList")
-
-	var u [][]int
-	err := json.Unmarshal([]byte(image), &u)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	execpy := exec.Command("py", "numrecog.py")
-	stdin, err := execpy.StdinPipe()
-	if err != nil {
-		fmt.Fprintln(w, "Number recognition input error")
-		fmt.Println(err)
-		return
-	}
-	stdout, err := execpy.StdoutPipe()
-	if err != nil {
-		fmt.Fprintln(w, "Number recognition output error")
-		fmt.Println(err)
-		return
-	}
-
-	execpy.Start()
-	scanner := bufio.NewScanner(stdout)
-	isbn := ""
-	for _, ii := range u {
-		str := fmt.Sprintf("%v", ii)
-		// 先頭と最後の1文字ずつ([])を取り除く
-		str = str[1 : len(str)-1]
-
-		io.WriteString(stdin, str+"\n")
-		// numPredicted, err := execpy.Output()
-		scanner.Scan()
-
-		isbn += scanner.Text()
-
-	}
-	fmt.Printf("結果: %s\n", isbn)
-	stdin.Close()
-	execpy.Wait()
-
-	generateHTML(w, isbn)
-}
-
-func handlerPredictCh(w http.ResponseWriter, r *http.Request) {
 	const PixelSize = 28
 
 	r.ParseForm()
@@ -210,22 +167,66 @@ func handlerPredictCh(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, isbn)
 }
 
+func callPyWithChan(pyScript string, chIn <-chan string, chOut chan<- string) {
+	execpy := exec.Command("py", pyScript)
+	stdin, err := execpy.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	stdout, err := execpy.StdoutPipe()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	stderr, err := execpy.StderrPipe()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	scannerErr := bufio.NewScanner(stderr)
+	go func() {
+		for scannerErr.Scan() {
+			fmt.Fprintln(os.Stderr, scannerErr.Text())
+		}
+	}()
+
+	execpy.Start()
+	defer execpy.Wait()
+
+	go func() {
+		for {
+			str, ok := <-chIn
+			if ok == false {
+				stdin.Close()
+				return
+			}
+			io.WriteString(stdin, str+"\n")
+		}
+	}()
+
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			chOut <- scanner.Text()
+		}
+	}()
+}
+
 func main() {
-
-	// go routine で Pythonスクリプトを起動して
-	// channel で やりとりさせたい
-
-	// go numrecog()
-
-	chNumrecogIn = make(chan<- string)
-	chNumrecogOut = make(<-chan string)
 
 	http.Handle("/style/",
 		http.StripPrefix("/style/",
 			http.FileServer(http.Dir("style/"))))
 	http.HandleFunc("/", handlerRoot)
 	http.HandleFunc("/reply", handlerReply)
+
+	// go routine で Pythonスクリプトを起動して
+	// channel で やりとりさせる
+	go callPyWithChan("barcode.py", chBarcodeIn, chBarcodeOut)
 	http.HandleFunc("/barcode", handlerBarcode)
+
+	go callPyWithChan("numrecog.py", chNumrecogIn, chNumrecogOut)
 	http.HandleFunc("/predict", handlerPredict)
 
 	http.ListenAndServe(":8888", nil)
