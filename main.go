@@ -235,10 +235,10 @@ func main() {
 
 	// go routine で Pythonスクリプトを起動して
 	// channel で やりとりさせる
-	go callPyWithChan("barcode.py", chBarcodeIn, chBarcodeOut)
+	go callPyWithChan("script/barcode.py", chBarcodeIn, chBarcodeOut)
 	http.HandleFunc("/barcode", handlerBarcode)
 
-	go callPyWithChan("numrecog.py", chNumrecogIn, chNumrecogOut)
+	go callPyWithChan("script/numrecog.py", chNumrecogIn, chNumrecogOut)
 	http.HandleFunc("/predict", handlerPredict)
 
 	http.ListenAndServe(":8888", nil)
