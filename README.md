@@ -5,28 +5,38 @@ Go 言語練習で作ったISBN入力するとその本の表紙を返すWebペ�
 - Windows10 1909
 - go version go1.14.1 windows/amd64
 - Python 3.8.2
+- Google Chrome 80.0.3987.163
 
 ## 事前準備
 go 言語と Python をインストール
 ### Python ライブラリ
 バーコード解釈用に pyzbar と pillow をインストール
-```powershell:install command
-pip install pyzbar pillow
+```pwsh
+> pip install pyzbar pillow
 ```
 数字認識用tensorflow とかインストール
-```
-pip install tensorflow==2.0.0 keras matplotlib Flask flask-cors
+```pwsh
+> pip install tensorflow keras matplotlib Flask flask-cors
 ```
 
+### 数字認識用データ学習
+```pwsh
+> cd script
+> python learning.py
+```
+cnn.h5 が作成される。
+
 ## 作成・実行
-```powershell:build command
-go build
-./barcode.exe
+```pwsh
+> go build
+> .\IsbnCover.exe
 ```
 として実行しておいて
 http://localhost:8888
 にwebブラウザでアクセスするとrootページが表示される
 
-テキストボックスにISBNを入力するか、
-アップロードフォームからISBNバーコードの写真を送ると
-表紙とAmazon商品ページへのリンクを表示するページが返る
+以下のいずれかでISBNを送信すると、表紙とAmazon商品ページへのリンクを表示するページが返る
+
+- テキストボックスにISBNを入力
+- アップロードフォームからISBNバーコードの写真を送る
+- Canvas 要素にISBNを手書き
