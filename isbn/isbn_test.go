@@ -15,4 +15,18 @@ func TestGetCheckDigit10(t *testing.T) {
 		t.Errorf("%s is not X\n", cd2)
 	}
 
+	isbnExample3 := "4121006240"
+	cd3 := getCheckDigit10(isbnExample3)
+	if cd3 != "0" {
+		t.Errorf("%s is not 0\n", cd3)
+	}
+}
+
+func TestIsbn13to10(t *testing.T) {
+	isbnExample1 := "9784873117522"
+	result13 := Isbn13to10(isbnExample1)
+	if result13 != "4873117526" {
+		t.Errorf("%s is not 1\n", result13)
+	}
+
 }
