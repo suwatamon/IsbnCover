@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bufio"
+	"IsbnCover/callpy"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -9,8 +9,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -38,57 +36,6 @@ func handlerRoot(w http.ResponseWriter, r *http.Request) {
 func handlerReply(w http.ResponseWriter, r *http.Request) {
 	isbn := r.FormValue("isbn")
 	generateHTML(w, isbn)
-}
-
-func generateHTML(w http.ResponseWriter, isbn string) {
-	type tmplData struct {
-		Isbn string
-	}
-
-	t := template.Must(template.ParseFiles("reply.html"))
-
-	if len(isbn) == 13 {
-		isbn = isbn13to10(isbn)
-	}
-
-	d := tmplData{Isbn: isbn}
-
-	// テンプレートを描画
-	if err := t.ExecuteTemplate(w, "reply.html", d); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func isbn13to10(isbn13 string) (isbn10 string) {
-	isbn10 = isbn13[3:13]
-	cd := getCheckDigit10(isbn10)
-	isbn10 = isbn10[:9] + cd
-	return
-}
-
-func getCheckDigit10(isbn10 string) (digit string) {
-	/// アルゴリズム：モジュラス11 ウェイト10-2
-	const MaxWeight = 10
-	const MinWeight = 2
-	const nWegiht = MaxWeight - MinWeight + 1
-
-	sum := 0
-	for idx := 0; idx < nWegiht; idx++ {
-		weight := MaxWeight - idx
-		digit, _ := strconv.Atoi(isbn10[idx : idx+1])
-		sum += weight * digit
-	}
-
-	c := 11 - (sum % 11)
-	if c == 10 {
-		digit = "X"
-	} else if c == 11 {
-		digit = "0"
-	} else {
-		digit = strconv.Itoa(c)
-	}
-
-	return
 }
 
 func handlerBarcode(w http.ResponseWriter, r *http.Request) {
@@ -176,52 +123,6 @@ func handlerPredict(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, isbn)
 }
 
-func callPyWithChan(pyScript string, chIn <-chan string, chOut chan<- string) {
-	execpy := exec.Command("py", pyScript)
-	stdin, err := execpy.StdinPipe()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	stdout, err := execpy.StdoutPipe()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	stderr, err := execpy.StderrPipe()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	scannerErr := bufio.NewScanner(stderr)
-	go func() {
-		for scannerErr.Scan() {
-			fmt.Fprintln(os.Stderr, scannerErr.Text())
-		}
-	}()
-
-	execpy.Start()
-	defer execpy.Wait()
-
-	go func() {
-		for {
-			str, ok := <-chIn
-			if ok == false {
-				stdin.Close()
-				return
-			}
-			io.WriteString(stdin, str+"\n")
-		}
-	}()
-
-	go func() {
-		scanner := bufio.NewScanner(stdout)
-		for scanner.Scan() {
-			chOut <- scanner.Text()
-		}
-	}()
-}
-
 func main() {
 
 	http.Handle("/style/",
@@ -235,10 +136,10 @@ func main() {
 
 	// go routine で Pythonスクリプトを起動して
 	// channel で やりとりさせる
-	go callPyWithChan("script/barcode.py", chBarcodeIn, chBarcodeOut)
+	go callpy.WithChan("script/barcode.py", chBarcodeIn, chBarcodeOut)
 	http.HandleFunc("/barcode", handlerBarcode)
 
-	go callPyWithChan("script/numrecog.py", chNumrecogIn, chNumrecogOut)
+	go callpy.WithChan("script/numrecog.py", chNumrecogIn, chNumrecogOut)
 	http.HandleFunc("/predict", handlerPredict)
 
 	http.ListenAndServe(":8888", nil)
