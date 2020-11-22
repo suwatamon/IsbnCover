@@ -1,3 +1,4 @@
 *.exe
 **/venv
 script/cnn.h5
+IsbnCover
