@@ -10,7 +10,7 @@ import (
 
 // WithChan calls Python script; stdio is connected cannels of arguments
 func WithChan(pyScript string, chIn <-chan string, chOut chan<- string) {
-	execpy := exec.Command("py", pyScript)
+	execpy := exec.Command("python3", pyScript)
 	stdin, err := execpy.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
