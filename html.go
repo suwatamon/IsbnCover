@@ -8,16 +8,17 @@ import (
 )
 
 func generateHTML(w http.ResponseWriter, isbnArg string) {
+	if len(isbnArg) == 13 {
+		isbnArg = isbn.Isbn13to10(isbnArg)
+	}
+
 	type tmplData struct {
 		Isbn string
 	}
 
 	t := template.Must(template.ParseFiles("reply.html"))
 
-	if len(isbnArg) == 13 {
-		isbnArg = isbn.Isbn13to10(isbnArg)
-	}
-
+	// setTemplateData
 	d := tmplData{Isbn: isbnArg}
 
 	// テンプレートを描画
@@ -25,3 +26,5 @@ func generateHTML(w http.ResponseWriter, isbnArg string) {
 		log.Fatal(err)
 	}
 }
+
+func setTemplateData() {}
