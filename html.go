@@ -29,9 +29,18 @@ func generateHTML(w http.ResponseWriter, isbnArg string) {
 }
 
 func setTemplateData(isbnArg string) (d tmplData) {
-	d = tmplData{
-		Isbn10: "4621300253",
-		Isbn13: "9784621300251",
+	var isbn10, isbn13 string
+	if len(isbnArg) == 10 {
+		isbn10 = isbnArg
+		isbn13 = "9784621300251"
+	} else {
+		isbn13 = isbnArg
+		isbn10 = isbn.Isbn13to10(isbnArg)
 	}
+	d = tmplData{
+		Isbn10: isbn10,
+		Isbn13: isbn13,
+	}
+
 	return
 }
