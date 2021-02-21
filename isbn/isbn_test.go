@@ -30,3 +30,22 @@ func TestIsbn13to10(t *testing.T) {
 	}
 
 }
+
+func TestIsbn10to13(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected string
+	}{
+		{"4873117526", "9784873117522"},
+		{"4065216982", "9784065216989"},
+		{"4621300253", "9784621300251"},
+	}
+
+	for _, tc := range cases {
+		// execute
+		result13 := Isbn10to13(tc.input)
+		if result13 != tc.expected {
+			t.Errorf("Returnd ISBN13 of %s is not %s: %s\n", tc.input, tc.expected, result13)
+		}
+	}
+}

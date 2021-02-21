@@ -32,7 +32,7 @@ func setTemplateData(isbnArg string) (d tmplData) {
 	var isbn10, isbn13 string
 	if len(isbnArg) == 10 {
 		isbn10 = isbnArg
-		isbn13 = "9784621300251"
+		isbn13 = isbn.Isbn10to13(isbnArg)
 	} else {
 		isbn13 = isbnArg
 		isbn10 = isbn.Isbn13to10(isbnArg)
