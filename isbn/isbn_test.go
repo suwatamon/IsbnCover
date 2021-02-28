@@ -49,3 +49,21 @@ func TestIsbn10to13(t *testing.T) {
 		}
 	}
 }
+
+func TestGetCheckDigit13(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected string
+	}{
+		{"9784873117522", "2"},
+		{"9784065216989", "9"},
+		{"9784621300251", "1"},
+	}
+	for _, tc := range cases {
+		// execute
+		cd := getCheckDigit13(tc.input)
+		if cd != tc.expected {
+			t.Errorf("Returnd checkdigit of ISBN13 for %s is not %s: %s\n", tc.input, tc.expected, cd)
+		}
+	}
+}

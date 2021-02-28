@@ -13,10 +13,6 @@ type tmplData struct {
 }
 
 func generateHTML(w http.ResponseWriter, isbnArg string) {
-	if len(isbnArg) == 13 {
-		isbnArg = isbn.Isbn13to10(isbnArg)
-	}
-
 	t := template.Must(template.ParseFiles("reply.html"))
 
 	// setTemplateData
