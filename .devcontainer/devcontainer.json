@@ -36,7 +36,10 @@
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"ms-python.python",
-		"golang.Go"
+		"golang.Go",
+		"mhutchie.git-graph",
+		"github.vscode-pull-request-github",
+		"ms-vsliveshare.vsliveshare-pack"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
