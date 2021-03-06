@@ -138,8 +138,6 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 # Install Go tools
 # copy from https://github.com/microsoft/vscode-dev-containers/blob/v0.137.0/containers/go/.devcontainer/base.Dockerfile
-
-# Install Go tools
 ARG GO_TOOLS_WITH_MODULES="\
     golang.org/x/tools/gopls \
     honnef.co/go/tools/... \
