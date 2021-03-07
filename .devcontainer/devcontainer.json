@@ -1,5 +1,5 @@
 {
-	"name": "Python 3.8, go 1.15.5",
+	"name": "Python 3.8, go 1.16",
 	"build": {
 		"dockerfile": "Dockerfile",
 		"context": "..",
@@ -27,17 +27,19 @@
 		"python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
 		"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
 		"python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
-		"go.useGoProxyToCheckForToolUpdates": false,
+		"go.toolsManagement.checkForUpdates": "off",
 		"go.useLanguageServer": true,
 		"go.gopath": "/go",
-		"go.goroot": "/usr/local/go",
-		"go.toolsGopath": "/go/bin"
+		"go.goroot": "/usr/local/go"
 	},
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"ms-python.python",
-		"golang.go"
+		"golang.Go",
+		"mhutchie.git-graph",
+		"github.vscode-pull-request-github",
+		"ms-vsliveshare.vsliveshare-pack"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
