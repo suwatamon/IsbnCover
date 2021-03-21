@@ -34,9 +34,40 @@ $(function () {
         return mem_div;
     }
 
+    function clearCanvas(canvas) {
+        var context = canvas.getContext('2d');
+        context.fillStyle = "white";
+        context.fillRect(0, 0, canvasWidth, canvasHeight);
+        context.fillStyle = "black";
+        let i = canvas.index;
+        for (let j = 0; j < PIXEL_SIZE ** 2; j++)
+            pixels[i][j] = 0;
+    }
+
+    function setCanvasEvents (canvas, pixel_i){
+        canvas.addEventListener("mousedown", e => {
+            e.target.drawing = true;
+        })
+
+        canvas.addEventListener("mouseup", e => {
+            e.target.drawing = false;
+        })
+
+        canvas.addEventListener("mousemove", e => {
+            const CF = CANVAS_FACTOR;
+            const PS = PIXEL_SIZE;
+            if (e.target.drawing) {
+                let x = Math.floor(e.offsetX / CF);
+                let y = Math.floor(e.offsetY / CF);
+                if (0 <= x && x < PS && 0 <= y && y < PS) {
+                    e.target.getContext("2d").fillRect(x * CF, y * CF, CF, CF);
+                    pixel_i[x + y * PS] = 1;
+                }
+            }
+        })
+    }
 
     var canvasList = [];
-    var buttonList = [];
     var canvas_area = document.getElementById('canvas_area');
 
     const N_CANVAS = 13;
@@ -64,56 +95,11 @@ $(function () {
             pixels[j][i] = 0;
     }
 
-    function setCanvasEvents (canvas, pixel_i){
-        canvas.addEventListener("mousedown", e => {
-            e.target.drawing = true;
-        })
-
-        canvas.addEventListener("mouseup", e => {
-            e.target.drawing = false;
-        })
-
-        canvas.addEventListener("mousemove", e => {
-            const CF = CANVAS_FACTOR;
-            const PS = PIXEL_SIZE;
-            if (e.target.drawing) {
-                let x = Math.floor(e.offsetX / CF);
-                let y = Math.floor(e.offsetY / CF);
-                if (0 <= x && x < PS && 0 <= y && y < PS) {
-                    e.target.getContext("2d").fillRect(x * CF, y * CF, CF, CF);
-                    pixel_i[x + y * PS] = 1;
-                }
-            }
-        })
-    }
 
     for (let i = 0; i < N_CANVAS; i++) {
         let canvas = canvasList[i];
         let pixel_i = pixels[i];
-        // var drawing = false;
         setCanvasEvents(canvas, pixel_i);
-
-        
-        // canvas.addEventListener("mousedown", e => {
-        //     e.target.drawing = true;
-        // })
-
-        // canvas.addEventListener("mouseup", e => {
-        //     e.target.drawing = false;
-        // })
-
-        // canvas.addEventListener("mousemove", e => {
-        //     const CF = CANVAS_FACTOR;
-        //     const PS = PIXEL_SIZE;
-        //     if (e.target.drawing) {
-        //         var x = Math.floor(e.offsetX / CF);
-        //         var y = Math.floor(e.offsetY / CF);
-        //         if (0 <= x && x < PS && 0 <= y && y < PS) {
-        //             e.target.getContext("2d").fillRect(x * CF, y * CF, CF, CF);
-        //             pixel_i[x + y * PS] = 1;
-        //         }
-        //     }
-        // })
     }
 
     $("#predict").click(function () {
@@ -125,15 +111,5 @@ $(function () {
             clearCanvas(canvasList[i]);
         }
     });
-
-    function clearCanvas(canvas) {
-        var context = canvas.getContext('2d');
-        context.fillStyle = "white";
-        context.fillRect(0, 0, canvasWidth, canvasHeight);
-        context.fillStyle = "black";
-        let i = canvas.index;
-        for (let j = 0; j < PIXEL_SIZE ** 2; j++)
-            pixels[i][j] = 0;
-    }
 
 });
