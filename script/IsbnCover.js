@@ -64,30 +64,56 @@ $(function () {
             pixels[j][i] = 0;
     }
 
-    for (let i = 0; i < N_CANVAS; i++) {
-        var canvas = canvasList[i];
-        // var drawing = false;
-
-        canvas.addEventListener("mousedown", function (e) {
+    function setCanvasEvents (canvas, pixel_i){
+        canvas.addEventListener("mousedown", e => {
             e.target.drawing = true;
         })
 
-        canvas.addEventListener("mouseup", function (e) {
+        canvas.addEventListener("mouseup", e => {
             e.target.drawing = false;
         })
 
-        canvas.addEventListener("mousemove", function (e) {
+        canvas.addEventListener("mousemove", e => {
             const CF = CANVAS_FACTOR;
             const PS = PIXEL_SIZE;
             if (e.target.drawing) {
-                var x = Math.floor(e.offsetX / CF);
-                var y = Math.floor(e.offsetY / CF);
+                let x = Math.floor(e.offsetX / CF);
+                let y = Math.floor(e.offsetY / CF);
                 if (0 <= x && x < PS && 0 <= y && y < PS) {
                     e.target.getContext("2d").fillRect(x * CF, y * CF, CF, CF);
-                    pixels[i][x + y * PS] = 1;
+                    pixel_i[x + y * PS] = 1;
                 }
             }
         })
+    }
+
+    for (let i = 0; i < N_CANVAS; i++) {
+        let canvas = canvasList[i];
+        let pixel_i = pixels[i];
+        // var drawing = false;
+        setCanvasEvents(canvas, pixel_i);
+
+        
+        // canvas.addEventListener("mousedown", e => {
+        //     e.target.drawing = true;
+        // })
+
+        // canvas.addEventListener("mouseup", e => {
+        //     e.target.drawing = false;
+        // })
+
+        // canvas.addEventListener("mousemove", e => {
+        //     const CF = CANVAS_FACTOR;
+        //     const PS = PIXEL_SIZE;
+        //     if (e.target.drawing) {
+        //         var x = Math.floor(e.offsetX / CF);
+        //         var y = Math.floor(e.offsetY / CF);
+        //         if (0 <= x && x < PS && 0 <= y && y < PS) {
+        //             e.target.getContext("2d").fillRect(x * CF, y * CF, CF, CF);
+        //             pixel_i[x + y * PS] = 1;
+        //         }
+        //     }
+        // })
     }
 
     $("#predict").click(function () {
