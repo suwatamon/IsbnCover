@@ -6,19 +6,17 @@ $(function () {
     const canvasHeight = canvasWidth;
 
     function createCanvas() {
-        var mem_canvas;
-        mem_canvas = document.createElement("canvas");
+        const mem_canvas = document.createElement("canvas");
         mem_canvas.width = canvasWidth;
         mem_canvas.height = canvasHeight;
         mem_canvas.setAttribute("style", "border: solid");
-        var context = mem_canvas.getContext('2d');
+        const context = mem_canvas.getContext('2d');
         context.fillStyle = "rgb(f,f,f)";
         return mem_canvas;
     }
 
     function createButton() {
-        let mem_button;
-        mem_button = document.createElement("input");
+        const mem_button = document.createElement("input");
         mem_button.type = "button";
         mem_button.value = "クリア";
         mem_button.addEventListener('click', e => clearCanvas(e.target.canvas));
@@ -27,15 +25,14 @@ $(function () {
     }
 
     function createDiv() {
-        let mem_div;
-        mem_div = document.createElement("div");
+        const mem_div = document.createElement("div");
         mem_div.classList.add("input-container");
 
         return mem_div;
     }
 
     function clearCanvas(canvas) {
-        var context = canvas.getContext('2d');
+        const context = canvas.getContext('2d');
         context.fillStyle = "white";
         context.fillRect(0, 0, canvasWidth, canvasHeight);
         context.fillStyle = "black";
@@ -71,10 +68,10 @@ $(function () {
     var canvas_area = document.getElementById('canvas_area');
 
     const N_CANVAS = 13;
-    for (var i = 0; i < N_CANVAS; i++) {
-        let tmpCanvas = createCanvas();
-        let tmpButton = createButton();
-        let tmpDiv = createDiv();
+    for (let i = 0; i < N_CANVAS; i++) {
+        const tmpCanvas = createCanvas();
+        const tmpButton = createButton();
+        const tmpDiv = createDiv();
 
         tmpCanvas.index = i;
         canvasList.push(tmpCanvas);
@@ -97,8 +94,8 @@ $(function () {
 
 
     for (let i = 0; i < N_CANVAS; i++) {
-        let canvas = canvasList[i];
-        let pixel_i = pixels[i];
+        const canvas = canvasList[i];
+        const pixel_i = pixels[i];
         setCanvasEvents(canvas, pixel_i);
     }
 
@@ -107,7 +104,7 @@ $(function () {
     });
 
     $("#all_clear").click(function () {
-        for (var i = 0; i < N_CANVAS; i++) {
+        for (let i = 0; i < N_CANVAS; i++) {
             clearCanvas(canvasList[i]);
         }
     });
