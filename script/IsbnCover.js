@@ -11,7 +11,7 @@ $(function () {
         mem_canvas.height = canvasHeight;
         mem_canvas.setAttribute("style", "border: solid");
         const context = mem_canvas.getContext('2d');
-        context.fillStyle = "rgb(f,f,f)";
+        context.fillStyle = "black";
         return mem_canvas;
     }
 
@@ -64,8 +64,8 @@ $(function () {
         })
     }
 
-    var canvasList = [];
-    var canvas_area = document.getElementById('canvas_area');
+    const canvasList = [];
+    const canvas_area = document.getElementById('canvas_area');
 
     const N_CANVAS = 13;
     for (let i = 0; i < N_CANVAS; i++) {
@@ -82,9 +82,7 @@ $(function () {
         canvas_area.appendChild(tmpDiv);
     }
 
-
-
-    var pixels = [];
+    const pixels = [];
 
     for (let j = 0; j < N_CANVAS; j++) {
         pixels[j] = [];
@@ -99,11 +97,11 @@ $(function () {
         setCanvasEvents(canvas, pixel_i);
     }
 
-    $("#predict").click(function () {
+    $("#predict").click( () => {
         document.querySelector("#hdnPredict").value = JSON.stringify(pixels);
     });
 
-    $("#all_clear").click(function () {
+    $("#all_clear").click( () => {
         for (let i = 0; i < N_CANVAS; i++) {
             clearCanvas(canvasList[i]);
         }
